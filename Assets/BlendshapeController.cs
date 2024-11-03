@@ -10,6 +10,7 @@ public class BlendshapeController : MonoBehaviour {
 	private string currentBlendshape, currentExpression;
 
 	private void Start() {
+		//set default values
 		currentExpression = "neutral";
 		currentBlendshape = "Fcl_BRW_Angry";
 		for (int i = 0; i < face.sharedMesh.blendShapeCount; i++) {
@@ -17,10 +18,15 @@ public class BlendshapeController : MonoBehaviour {
 		}
 	}
 	void Update() {
+		//move towards target weight
 		for (int i = 0; i < targetWeights.Count; i++) {
 			face.SetBlendShapeWeight(i, Mathf.MoveTowards(face.GetBlendShapeWeight(i), targetWeights[i], Time.deltaTime * speed));
 		}
+
+		//update current expression status
 		ExpressionStatus(currentExpression, currentBlendshape);
+
+		//process inputs
 		if (Input.GetKey(KeyCode.LeftShift)) {
 			if (Input.GetKeyDown(KeyCode.Alpha1)) {
 				//increase joy
@@ -51,42 +57,62 @@ public class BlendshapeController : MonoBehaviour {
 		}
 		else {
 			if (Input.GetKeyDown(KeyCode.Alpha0)) {
-				ResetBlendshapeWeights();
+				ExpressionNeutral();
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha1)) {
-				//joy
-				ResetBlendshapeWeights();
-				SetBlendshapeWeight("Fcl_ALL_Joy", 100);
+				ExpressionJoy();
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha2)) {
-				//angry
-				ResetBlendshapeWeights();
-				SetBlendshapeWeight("Fcl_ALL_Angry", 100);
+				ExpressionAngry();
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha3)) {
-				//surprised
-				ResetBlendshapeWeights();
-				SetBlendshapeWeight("Fcl_ALL_Surprised", 100);
+				ExpressionSurprised();
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha4)) {
-				//surprised
-				ResetBlendshapeWeights();
-				SetBlendshapeWeight("Fcl_ALL_Sorrow", 100);
+				ExpressionSorrow();
 			}
 			if (Input.GetKeyDown(KeyCode.Alpha5)) {
-				//screaming
-				ResetBlendshapeWeights();
-				SetBlendshapeWeight("Fcl_EYE_Close", 51);
-				SetBlendshapeWeight("Fcl_EYE_Sorrow", 100);
-				SetBlendshapeWeight("Fcl_MTH_Up", 33);
-				SetBlendshapeWeight("Fcl_MTH_Sorrow", 10);
-				SetBlendshapeWeight("Fcl_MTH_Surprised", 100);
-				SetBlendshapeWeight("Fcl_MTH_A", 2);
-				SetBlendshapeWeight("Fcl_BRW_Angry", 100);
+				ExpressionScream();
 			}
 		}
 	}
 
+	public void ExpressionNeutral() {
+		ResetBlendshapeWeights();
+	}
+	public void ExpressionJoy() {
+		//joy
+		ResetBlendshapeWeights();
+		SetBlendshapeWeight("Fcl_ALL_Joy", 100);
+	}
+	public void ExpressionAngry() {
+		//angry
+		ResetBlendshapeWeights();
+		SetBlendshapeWeight("Fcl_ALL_Angry", 100);
+	}
+	public void ExpressionSurprised() {
+		//surprised
+		ResetBlendshapeWeights();
+		SetBlendshapeWeight("Fcl_ALL_Surprised", 100);
+	}
+	public void ExpressionSorrow() {
+		//sorrow
+		ResetBlendshapeWeights();
+		SetBlendshapeWeight("Fcl_ALL_Sorrow", 100);
+	}
+	public void ExpressionScream() {
+		//screaming
+		ResetBlendshapeWeights();
+		SetBlendshapeWeight("Fcl_EYE_Close", 51);
+		SetBlendshapeWeight("Fcl_EYE_Sorrow", 100);
+		SetBlendshapeWeight("Fcl_MTH_Up", 33);
+		SetBlendshapeWeight("Fcl_MTH_Sorrow", 10);
+		SetBlendshapeWeight("Fcl_MTH_Surprised", 100);
+		SetBlendshapeWeight("Fcl_MTH_A", 2);
+		SetBlendshapeWeight("Fcl_BRW_Angry", 100);
+	}
+
+	//returns target weights to zero and sets expression to neutral
 	void ResetBlendshapeWeights() {
 		for (int i = 0; i < targetWeights.Count; i++) {
 			targetWeights[i] = 0;
@@ -94,22 +120,28 @@ public class BlendshapeController : MonoBehaviour {
 		currentExpression = "neutral";
 	}
 
+	//sets blendshape weight given blendshape name with value
 	void SetBlendshapeWeight(string blendShapeName, float weight) {
 		SetBlendshapeWeight(face.sharedMesh.GetBlendShapeIndex(blendShapeName), weight);
 	}
 
+	//modifies blendshape weight given blendshape name with value
 	void ChangeBlendshapeWeight(string blendShapeName, float weight) {
 		SetBlendshapeWeight(face.sharedMesh.GetBlendShapeIndex(blendShapeName), GetBlendshapeWeight(blendShapeName) + weight);
 	}
 
+	//returns weight of blendshape given blendshape name
 	float GetBlendshapeWeight(string blendShapeName) {
 		return face.GetBlendShapeWeight(face.sharedMesh.GetBlendShapeIndex(blendShapeName));
 	}
 
+	//sets blendshape weight given blendshape index with value
 	void SetBlendshapeWeight(int blendShapeIndex, float weight) {
+		//limits weight to a range of 0 to 100 so it doesn't become deformed
 		targetWeights[blendShapeIndex] = Mathf.Clamp(weight, 0, 100);
+
+		//sets current expression and weight value for the expression status
 		currentBlendshape = face.sharedMesh.GetBlendShapeName(blendShapeIndex);
-		//Debug.Log(currentBlendshape + " " + blendShapeIndex);
 		switch (blendShapeIndex) {
 			case 1:
 				currentExpression = "angry";
@@ -133,6 +165,7 @@ public class BlendshapeController : MonoBehaviour {
 
 	}
 
+	//shows current expression status
 	void ExpressionStatus(string expression, string blendshape) {
 		if (expression == "neutral") {
 			status.text = "Current expression: " + expression + " " + (100 - GetBlendshapeWeight(blendshape)) + "%";
